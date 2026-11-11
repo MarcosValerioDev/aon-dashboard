@@ -1,0 +1,612 @@
+<title>Painel de Evolução do Aluno</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Saira+Semi+Condensed:wght@500;600;700&display=swap">
+<style>
+/* Layout: cockpit-style instrument panel. Header strip, KPI gauges, then a 2-column grid of instruments over a session log. Dark only, by request. */
+:root {
+  color-scheme: dark;
+  --bg: #090D13;
+  --surface: #0F151E;
+  --surface-2: #141C27;
+  --line: #1F2938;
+  --line-2: #2A3647;
+  --fg: #E6EBF2;
+  --muted: #8A98AA;
+  --faint: #5B6878;
+  --accent: #7CD3E6;
+  --accent-dim: rgba(124, 211, 230, .14);
+  --amber: #E6B45C;
+  --good: #5CC491;
+  --good-dim: rgba(92, 196, 145, .14);
+  --bad: #E57A63;
+  --bad-dim: rgba(229, 122, 99, .14);
+  --display: "Saira Semi Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  background-image: radial-gradient(1200px 500px at 85% -10%, rgba(124,211,230,.06), transparent 60%);
+  color: var(--fg);
+  font-family: var(--body);
+  font-size: 14px;
+  line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 48px;
+}
+.wrap { max-width: 1200px; margin: 0 auto; display: grid; gap: 20px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; margin: 0; text-wrap: balance; letter-spacing: .01em; }
+.eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.num { font-variant-numeric: tabular-nums; }
+
+/* Header strip */
+.strip { display: grid; grid-template-columns: auto 1fr auto; gap: 20px; align-items: center; padding-block: 4px 18px; border-bottom: 1px solid var(--line); }
+.avatar { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; font-family: var(--display); font-weight: 600; font-size: 20px; color: var(--accent); background: var(--surface-2); border: 1px solid var(--line-2); }
+.who h1 { font-size: 30px; line-height: 1.1; }
+.who .meta { display: flex; flex-wrap: wrap; gap: 6px 16px; color: var(--muted); margin-top: 6px; font-size: 13px; }
+.who .meta b { color: var(--fg); font-weight: 500; }
+.status { display: grid; justify-items: end; gap: 6px; }
+.pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; border: 1px solid; }
+.pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.pill.ok { color: var(--good); background: var(--good-dim); border-color: rgba(92,196,145,.35); }
+.pill.wip { color: var(--amber); background: rgba(230,180,92,.12); border-color: rgba(230,180,92,.35); }
+.status small { color: var(--muted); font-size: 12px; text-align: right; }
+
+/* KPI gauges */
+.kpis { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 14px; background: var(--surface); overflow: hidden; }
+.kpi { padding: 16px 18px 18px; display: grid; gap: 4px; align-content: start; border-right: 1px solid var(--line); min-width: 0; }
+.kpi:last-child { border-right: 0; }
+.kpi .v { font-family: var(--display); font-size: 34px; font-weight: 600; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.kpi .v small { font-size: 18px; color: var(--muted); font-weight: 500; margin-left: 2px; }
+.kpi .d { font-size: 12px; color: var(--muted); }
+.kpi .d .up { color: var(--good); }
+.kpi .d .down { color: var(--bad); }
+.kpi.hero .v { color: var(--accent); }
+
+/* Panels */
+.grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 20px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px 20px; min-width: 0; display: grid; gap: 14px; align-content: start; }
+.panel header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 16px; }
+.panel h2 { font-size: 19px; }
+.panel .sub { color: var(--muted); font-size: 13px; max-width: 62ch; margin: 2px 0 0; }
+.span-8 { grid-column: span 8; } .span-4 { grid-column: span 4; } .span-6 { grid-column: span 6; } .span-12 { grid-column: span 12; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--muted); }
+.legend i { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 6px; background: currentColor; }
+.legend i.dot { width: 8px; height: 8px; border-radius: 50%; }
+.legend i.dash { background: repeating-linear-gradient(90deg, currentColor 0 4px, transparent 4px 7px); }
+
+/* SVG chart text */
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+svg text { font-family: var(--mono); font-size: 11px; fill: var(--faint); }
+svg .lbl { fill: var(--muted); }
+svg .lbl-fg { fill: var(--fg); }
+svg .lbl-accent { fill: var(--accent); }
+svg .lbl-amber { fill: var(--amber); }
+.chart { position: relative; }
+.tip { position: absolute; pointer-events: none; background: var(--surface-2); border: 1px solid var(--line-2); border-radius: 10px; padding: 10px 12px; font-size: 12px; min-width: 170px; box-shadow: 0 10px 30px rgba(0,0,0,.45); transform: translate(-50%, calc(-100% - 14px)); z-index: 2; }
+.tip b { font-family: var(--display); font-size: 16px; font-weight: 600; }
+.tip .row { display: flex; justify-content: space-between; gap: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tip .row span:last-child { color: var(--fg); }
+.hit { cursor: crosshair; }
+.hit:focus { outline: none; }
+.hit:focus-visible + .ring, .hit:hover + .ring { opacity: 1; }
+
+/* Approval rule */
+.rule { display: grid; gap: 14px; }
+.streak { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 6px; }
+.tile { border: 1px solid var(--line-2); border-radius: 8px; padding: 8px 4px 7px; text-align: center; display: grid; gap: 2px; background: var(--surface-2); }
+.tile .s { font-family: var(--mono); font-size: 10px; color: var(--faint); }
+.tile .p { font-family: var(--display); font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.tile.pass { border-color: rgba(92,196,145,.45); background: var(--good-dim); }
+.tile.pass .p { color: var(--good); }
+.tile.fail .p { color: var(--muted); }
+.tile.in-streak { box-shadow: inset 0 -3px 0 var(--good); }
+.rule-box { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; padding: 14px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--line); }
+.ring-meter { width: 64px; height: 64px; }
+.rule-box p { margin: 0; color: var(--muted); font-size: 13px; }
+.rule-box p b { color: var(--fg); font-weight: 600; }
+.rule dl { display: grid; grid-template-columns: 1fr auto; gap: 8px 12px; margin: 0; font-size: 13px; }
+.rule dt { color: var(--muted); }
+.rule dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; font-family: var(--mono); font-size: 12.5px; }
+
+/* Insights */
+.insights { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 28px; margin: 0; padding: 0; list-style: none; }
+.insights li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; align-items: start; padding-block: 10px; border-top: 1px solid var(--line); min-width: 0; }
+.insights .mk { width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; font-family: var(--mono); font-size: 12px; font-weight: 500; }
+.mk.pos { color: var(--good); background: var(--good-dim); }
+.mk.neg { color: var(--bad); background: var(--bad-dim); }
+.mk.neu { color: var(--accent); background: var(--accent-dim); }
+.insights h3 { font-family: var(--body); font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+.insights p { margin: 0; color: var(--muted); font-size: 13px; }
+
+/* Table */
+.table-wrap { overflow-x: auto; margin-inline: -4px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 760px; }
+th { text-align: left; font-family: var(--mono); font-weight: 500; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); padding: 8px 10px; border-bottom: 1px solid var(--line-2); white-space: nowrap; }
+td { padding: 9px 10px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; white-space: nowrap; }
+td.r, th.r { text-align: right; }
+tbody tr:hover td { background: var(--surface-2); }
+.perf { display: flex; align-items: center; gap: 10px; }
+.perf .bar { flex: 1; height: 4px; border-radius: 2px; background: var(--line-2); position: relative; min-width: 80px; }
+.perf .bar span { position: absolute; inset: 0 auto 0 0; border-radius: 2px; background: var(--accent); }
+.perf .bar span.pass { background: var(--good); }
+.perf .bar::after { content: ""; position: absolute; left: 85%; top: -3px; bottom: -3px; width: 1px; background: var(--amber); }
+.delta.pos { color: var(--good); } .delta.neg { color: var(--bad); }
+.tag { font-family: var(--mono); font-size: 10.5px; color: var(--amber); border: 1px solid rgba(230,180,92,.35); border-radius: 4px; padding: 1px 5px; margin-left: 6px; }
+
+footer { color: var(--faint); font-size: 12px; display: grid; gap: 4px; border-top: 1px solid var(--line); padding-top: 16px; }
+footer code { font-family: var(--mono); color: var(--muted); font-size: 11.5px; }
+
+@media (max-width: 1040px) {
+  .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .kpi:nth-child(3n) { border-right: 0; }
+  .kpi:nth-child(-n+3) { border-bottom: 1px solid var(--line); }
+  .span-8, .span-4, .span-6 { grid-column: span 12; }
+}
+@media (max-width: 640px) {
+  .strip { grid-template-columns: auto 1fr; }
+  .status { grid-column: 1 / -1; justify-items: start; }
+  .status small { text-align: left; }
+  .who h1 { font-size: 24px; }
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .kpi { border-right: 1px solid var(--line) !important; border-bottom: 1px solid var(--line); }
+  .kpi:nth-child(2n) { border-right: 0 !important; }
+  .kpi:nth-last-child(-n+2) { border-bottom: 0; }
+  .kpi .v { font-size: 28px; }
+  .insights { grid-template-columns: minmax(0, 1fr); }
+  .streak { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .panel { padding: 16px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .draw { stroke-dasharray: var(--len); stroke-dashoffset: var(--len); animation: draw 1.4s cubic-bezier(.3,.7,.2,1) .15s forwards; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+}
+</style>
+
+<div class="wrap">
+  <section class="strip" aria-label="Aluno">
+    <div class="avatar" aria-hidden="true">AM</div>
+    <div class="who">
+      <div class="eyebrow">Cut-E / AON · Hand Eye Coordination</div>
+      <h1>Ana Beatriz Moura</h1>
+      <div class="meta">
+        <span>Matrícula <b class="num">PP-2026-0417</b></span>
+        <span>Turma <b>Piloto Privado · 2026/2</b></span>
+        <span id="meta-period">Período</span>
+      </div>
+    </div>
+    <div class="status">
+      <span id="status-pill" class="pill wip">Em treinamento</span>
+      <small id="status-note"></small>
+    </div>
+  </section>
+
+  <section class="kpis" id="kpis" aria-label="Indicadores principais"></section>
+
+  <div class="grid">
+    <section class="panel span-8">
+      <header>
+        <div>
+          <h2>Curva de aprendizagem</h2>
+          <p class="sub">Performance por sessão (acertos ÷ tentativas), com a curva ajustada e a projeção das próximas 3 sessões.</p>
+        </div>
+        <div class="legend">
+          <span style="color:var(--accent)"><i></i>Sessão</span>
+          <span style="color:var(--muted)"><i class="dash"></i>Curva ajustada</span>
+          <span style="color:var(--amber)"><i class="dash"></i>Meta 85%</span>
+          <span style="color:var(--good)"><i class="dot"></i>Sequência de aprovação</span>
+        </div>
+      </header>
+      <div class="chart" id="curve"></div>
+    </section>
+
+    <section class="panel span-4 rule">
+      <header>
+        <div>
+          <h2>Critério de aprovação</h2>
+          <p class="sub">3 sessões consecutivas com performance ≥ 85%.</p>
+        </div>
+      </header>
+      <div class="rule-box" id="rule-box"></div>
+      <div>
+        <div class="eyebrow" style="margin-bottom:8px">Últimas 8 sessões</div>
+        <div class="streak" id="streak"></div>
+      </div>
+      <dl id="rule-dl"></dl>
+    </section>
+
+    <section class="panel span-6">
+      <header>
+        <div>
+          <h2>Posição na turma</h2>
+          <p class="sub">Cada ponto é um aluno da turma (n = 28). Compara a aptidão bruta (1ª sessão) com o platô treinado.</p>
+        </div>
+      </header>
+      <div class="chart" id="class"></div>
+    </section>
+
+    <section class="panel span-6">
+      <header>
+        <div>
+          <h2>Velocidade × precisão</h2>
+          <p class="sub">Mais tentativas no mesmo tempo de prova significa ritmo mais alto. O ideal é subir nos dois eixos.</p>
+        </div>
+        <div class="legend">
+          <span style="color:var(--faint)"><i class="dot"></i>Sessões iniciais</span>
+          <span style="color:var(--accent)"><i class="dot"></i>Sessões recentes</span>
+        </div>
+      </header>
+      <div class="chart" id="scatter"></div>
+    </section>
+
+    <section class="panel span-6">
+      <header>
+        <div>
+          <h2>Fadiga e pausas</h2>
+          <p class="sub">Diferença média entre o resultado real e o esperado pela curva, em pontos percentuais. Isola o efeito do contexto do efeito do aprendizado.</p>
+        </div>
+      </header>
+      <div class="chart" id="context"></div>
+    </section>
+
+    <section class="panel span-6">
+      <header>
+        <div>
+          <h2>Composição dos erros</h2>
+          <p class="sub">Erros por tentativa ao longo das sessões, separando aberturas perdidas de colisões.</p>
+        </div>
+        <div class="legend">
+          <span style="color:var(--bad)"><i class="dot"></i>Colisão</span>
+          <span style="color:var(--amber)"><i class="dot"></i>Abertura perdida</span>
+        </div>
+      </header>
+      <div class="chart" id="errors"></div>
+    </section>
+
+    <section class="panel span-12">
+      <header>
+        <div>
+          <h2>Leitura para o instrutor</h2>
+          <p class="sub">Gerada a partir dos indicadores acima.</p>
+        </div>
+      </header>
+      <ul class="insights" id="insights"></ul>
+    </section>
+
+    <section class="panel span-12">
+      <header>
+        <div>
+          <h2>Registro de sessões</h2>
+          <p class="sub">Um registro por tentativa no banco. Δ curva compara a sessão com o valor esperado pela curva ajustada.</p>
+        </div>
+      </header>
+      <div class="table-wrap"><table id="log"></table></div>
+    </section>
+  </div>
+
+  <footer>
+    <span>Protótipo com dados simulados. Nenhum número é de aluno real.</span>
+    <span>Para dados reais, cada registro precisa de <code>studentId</code> e <code>sessionAt</code> além dos campos do <code>TrainingResult</code> (<code>attemps</code>, <code>correct</code>, <code>erros</code>, <code>performance</code>, <code>missedOpening</code>).</span>
+  </footer>
+</div>
+
+<script>
+(() => {
+  const NS = "http://www.w3.org/2000/svg";
+  const TARGET = 85, STREAK_NEEDED = 3, LAST_N = 5;
+
+  // ---------- Mock data (seeded, deterministic) ----------
+  function mulberry32(a){ return function(){ a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  const rnd = mulberry32(417);
+  const gauss = () => { let u = 0, v = 0; while (!u) u = rnd(); while (!v) v = rnd(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+
+  const start = new Date(2026, 8, 21); // 21 set 2026
+  const plan = [[0,"09:10"],[0,"09:32"],[2,"14:05"],[4,"09:20"],[4,"09:41"],[4,"10:02"],[7,"15:30"],[9,"09:15"],[11,"14:00"],[11,"14:22"],[14,"09:05"],
+                [26,"10:10"],[28,"09:00"],[28,"09:25"],[30,"16:00"],[32,"09:10"],[35,"14:40"],[37,"09:05"],[37,"09:28"],[40,"10:00"]];
+  const sessions = [];
+  plan.forEach(([day, hm], i) => {
+    const [h, m] = hm.split(":").map(Number);
+    const at = new Date(start); at.setDate(at.getDate() + day); at.setHours(h, m, 0, 0);
+    const order = plan.slice(0, i).filter(p => p[0] === day).length + 1; // ordem no dia
+    const prevDay = i ? plan[i-1][0] : day;
+    const gap = day - prevDay;
+    const sinceGap = (() => { for (let k = i; k > 0; k--) if (plan[k][0] - plan[k-1][0] > 7) return i - k; return -1; })();
+    let p = 0.875 - 0.29 * Math.exp(-0.21 * i);
+    p += order === 2 ? -0.022 : order >= 3 ? -0.05 : 0.004;
+    if (sinceGap === 0) p -= 0.075; else if (sinceGap === 1) p -= 0.03;
+    p += gauss() * (0.024 - i * 0.0006);
+    p = Math.min(0.97, Math.max(0.4, p));
+    const attempts = Math.round(41 + 15 * (1 - Math.exp(-0.16 * i)) + gauss() * 1.6 - (order >= 3 ? 2 : 0));
+    const correct = Math.round(attempts * p);
+    const errors = attempts - correct;
+    const missed = Math.min(errors, Math.round(errors * (0.62 - i * 0.012) + gauss() * 0.8));
+    sessions.push({ n: i + 1, at, day, order, gap, sinceGap, attempts, correct, errors, missed: Math.max(0, missed), perf: correct / attempts * 100 });
+  });
+
+  // Turma (27 colegas + aluna)
+  const classFirst = [], classPlat = [];
+  for (let i = 0; i < 27; i++) { classFirst.push(Math.max(38, Math.min(84, 63 + gauss() * 8.5))); classPlat.push(Math.max(66, Math.min(95, 83 + gauss() * 5.2))); }
+
+  // ---------- Indicators ----------
+  const N = sessions.length;
+  const perf = sessions.map(s => s.perf);
+  const mean = a => a.reduce((x, y) => x + y, 0) / a.length;
+  const std = a => { const m = mean(a); return Math.sqrt(a.reduce((x, y) => x + (y - m) ** 2, 0) / (a.length - 1)); };
+
+  // Ajuste p(i) = a + c·e^(−k·i), busca em k + mínimos quadrados em a, c
+  let fit = null;
+  for (let k = 0.03; k <= 0.8; k += 0.0025) {
+    const xs = sessions.map((_, i) => Math.exp(-k * i));
+    const mx = mean(xs), my = mean(perf);
+    let sxy = 0, sxx = 0; xs.forEach((x, i) => { sxy += (x - mx) * (perf[i] - my); sxx += (x - mx) ** 2; });
+    const c = sxy / sxx, a = my - c * mx;
+    const sse = xs.reduce((acc, x, i) => acc + (perf[i] - (a + c * x)) ** 2, 0);
+    if (!fit || sse < fit.sse) fit = { k, a, c, sse };
+  }
+  const expected = i => fit.a + fit.c * Math.exp(-fit.k * i); // i = índice 0-based
+  sessions.forEach((s, i) => s.resid = s.perf - expected(i));
+  const plateau = mean(perf.slice(-LAST_N));
+  // primeira sessão em que a média móvel de 3 chega a 3 pp do platô
+  const toPlateau = (() => { for (let i = 0; i + 2 < N; i++) if (mean(perf.slice(i, i + 3)) >= plateau - 3) return i + 1; return N; })();
+  const consistency = std(perf.slice(-LAST_N));
+  const firstPerf = perf[0];
+  const last = sessions[N - 1], prev = sessions[N - 2];
+  const earlySlope = (() => { const xs = [0,1,2,3,4], ys = perf.slice(0,5), mx = mean(xs), my = mean(ys); let a = 0, b = 0; xs.forEach((x,i)=>{a+=(x-mx)*(ys[i]-my); b+=(x-mx)**2;}); return a / b; })();
+
+  // Sequência de aprovação
+  let streak = 0, approvedAt = null, run = 0;
+  sessions.forEach(s => { run = s.perf >= TARGET ? run + 1 : 0; s.run = run; if (run >= STREAK_NEEDED && !approvedAt) approvedAt = s; });
+  streak = sessions[N - 1].run;
+  const approved = !!approvedAt;
+  const streakSet = new Set();
+  if (approvedAt) for (let k = approvedAt.n - STREAK_NEEDED + 1; k <= approvedAt.n; k++) streakSet.add(k);
+  for (let k = N - streak + 1; k <= N; k++) if (streak) streakSet.add(k);
+
+  const pct = (arr, v) => Math.round(arr.filter(x => x < v).length / (arr.length + 1) * 100 + 100 / (arr.length + 1) / 2);
+  const pctFirst = pct(classFirst, firstPerf), pctPlat = pct(classPlat, plateau);
+
+  const corr = (xs, ys) => { const mx = mean(xs), my = mean(ys); let a=0,b=0,c=0; xs.forEach((x,i)=>{a+=(x-mx)*(ys[i]-my); b+=(x-mx)**2; c+=(ys[i]-my)**2;}); return a / Math.sqrt(b*c); };
+  const rSpeedAcc = corr(sessions.map(s => s.attempts), perf);
+
+  const groups = [
+    { key: "1ª sessão do dia", f: s => s.order === 1 && s.sinceGap !== 0 },
+    { key: "2ª seguida no dia", f: s => s.order === 2 },
+    { key: "3ª seguida no dia", f: s => s.order === 3 },
+    { key: "1ª após pausa > 7 dias", f: s => s.sinceGap === 0 },
+  ].map(g => { const ss = sessions.filter(g.f); return { ...g, n: ss.length, v: ss.length ? mean(ss.map(s => s.resid)) : 0 }; });
+
+  // ---------- Format helpers ----------
+  const fmt = (v, d = 1) => v.toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d });
+  const dShort = d => d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }).replace(".", "");
+  const dFull = d => d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+  const hm = d => d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  const el = (tag, attrs = {}, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+  const txt = (parent, x, y, s, attrs = {}) => { const t = el("text", { x, y, ...attrs }, parent); t.textContent = s; return t; };
+  const signed = (v, d = 1) => (v > 0 ? "+" : v < 0 ? "−" : "±") + fmt(Math.abs(v), d);
+
+  // ---------- Header ----------
+  document.getElementById("meta-period").innerHTML = `Período <b class="num">${dShort(sessions[0].at)} – ${dShort(last.at)} 2026</b>`;
+  const pill = document.getElementById("status-pill");
+  if (approved) { pill.className = "pill ok"; pill.textContent = "Apto"; document.getElementById("status-note").textContent = `Critério atingido na sessão ${approvedAt.n} (${dShort(approvedAt.at)})`; }
+  else { pill.className = "pill wip"; pill.textContent = `Em treinamento · ${streak}/${STREAK_NEEDED}`; document.getElementById("status-note").textContent = `Faltam ${STREAK_NEEDED - streak} sessões seguidas ≥ ${TARGET}%`; }
+
+  // ---------- KPIs ----------
+  const dl = last.perf - prev.perf;
+  const kpis = [
+    { e: "Última sessão", v: fmt(last.perf), u: "%", d: `<span class="${dl >= 0 ? "up" : "down"}">${signed(dl)} pp</span> vs anterior`, hero: true },
+    { e: "Platô treinado", v: fmt(plateau), u: "%", d: `média das últimas ${LAST_N}` },
+    { e: "Aptidão bruta", v: fmt(firstPerf), u: "%", d: `1ª sessão · <span class="up">${signed(plateau - firstPerf)} pp</span> até o platô` },
+    { e: "Consistência", v: "±" + fmt(consistency), u: "pp", d: `desvio padrão das últimas ${LAST_N}` },
+    { e: "Sessões até o platô", v: String(toPlateau), u: "", d: `ganho inicial de ${fmt(earlySlope)} pp/sessão` },
+    { e: "Percentil na turma", v: "P" + pctPlat, u: "", d: `era P${pctFirst} na 1ª sessão` },
+  ];
+  document.getElementById("kpis").innerHTML = kpis.map(k => `<div class="kpi${k.hero ? " hero" : ""}"><span class="eyebrow">${k.e}</span><span class="v">${k.v}${k.u ? `<small>${k.u}</small>` : ""}</span><span class="d">${k.d}</span></div>`).join("");
+
+  // ---------- Tooltip ----------
+  function tooltip(host) {
+    const t = document.createElement("div"); t.className = "tip"; t.hidden = true; host.appendChild(t);
+    return {
+      show(svg, x, y, html) {
+        const r = svg.getBoundingClientRect(), vb = svg.viewBox.baseVal, sx = r.width / vb.width, hr = host.getBoundingClientRect();
+        t.innerHTML = html; t.hidden = false;
+        let px = r.left - hr.left + x * sx, py = r.top - hr.top + y * sx;
+        const w = t.offsetWidth; px = Math.max(w / 2, Math.min(hr.width - w / 2, px));
+        t.style.left = px + "px"; t.style.top = py + "px";
+      },
+      hide() { t.hidden = true; }
+    };
+  }
+  const tipHtml = s => `<b>Sessão ${s.n}</b> <span style="color:var(--muted)">· ${dShort(s.at)}, ${hm(s.at)}</span>
+    <div class="row"><span>Performance</span><span>${fmt(s.perf)}%</span></div>
+    <div class="row"><span>Acertos / tentativas</span><span>${s.correct} / ${s.attempts}</span></div>
+    <div class="row"><span>Erros</span><span>${s.errors}</span></div>
+    <div class="row"><span>Δ vs curva</span><span>${signed(s.resid)} pp</span></div>`;
+
+  // ---------- Learning curve ----------
+  (() => {
+    const host = document.getElementById("curve"), W = 760, H = 320, m = { l: 40, r: 18, t: 22, b: 34 };
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Gráfico da curva de aprendizagem" }, host);
+    const PROJ = 3, xmax = N + PROJ;
+    const x = n => m.l + (n - 0.5) / xmax * (W - m.l - m.r);
+    const y = v => m.t + (100 - v) / 60 * (H - m.t - m.b);
+    const defs = el("defs", {}, svg);
+    const g = el("linearGradient", { id: "area", x1: 0, y1: 0, x2: 0, y2: 1 }, defs);
+    el("stop", { offset: "0", "stop-color": "#7CD3E6", "stop-opacity": ".22" }, g);
+    el("stop", { offset: "1", "stop-color": "#7CD3E6", "stop-opacity": "0" }, g);
+    for (let v = 40; v <= 100; v += 10) { el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: "#1F2938", "stroke-width": 1 }, svg); txt(svg, m.l - 8, y(v) + 4, v + "%", { "text-anchor": "end" }); }
+    // projection zone
+    el("rect", { x: x(N + 0.5), y: m.t, width: x(xmax + 0.5) - x(N + 0.5), height: H - m.t - m.b, fill: "#141C27" }, svg);
+    txt(svg, (x(N + 0.5) + x(xmax + 0.5)) / 2, m.t + 14, "PROJEÇÃO", { "text-anchor": "middle", "letter-spacing": ".1em" });
+    // gap marker
+    sessions.forEach((s, i) => { if (s.gap > 7) { const gx = (x(s.n) + x(s.n - 1)) / 2; el("line", { x1: gx, x2: gx, y1: m.t, y2: H - m.b, stroke: "#2A3647", "stroke-dasharray": "3 4" }, svg); txt(svg, gx + 6, H - m.b - 8, `pausa ${s.gap} dias`, { class: "lbl" }); } });
+    // target
+    el("line", { x1: m.l, x2: W - m.r, y1: y(TARGET), y2: y(TARGET), stroke: "#E6B45C", "stroke-width": 1.2, "stroke-dasharray": "6 5", opacity: .9 }, svg);
+    txt(svg, m.l + 6, y(TARGET) - 6, `META ${TARGET}%`, { class: "lbl-amber" });
+    // fitted + projection
+    let d = ""; for (let t = 0; t <= xmax - 1; t += 0.1) d += (t ? "L" : "M") + x(t + 1).toFixed(1) + "," + y(expected(t)).toFixed(1);
+    el("path", { d, fill: "none", stroke: "#8A98AA", "stroke-width": 1.4, "stroke-dasharray": "4 4", opacity: .8 }, svg);
+    const projEnd = expected(xmax - 1);
+    txt(svg, x(xmax), y(projEnd) - 10, fmt(projEnd) + "%", { "text-anchor": "middle", class: "lbl" });
+    // area + line
+    const pts = sessions.map(s => [x(s.n), y(s.perf)]);
+    el("path", { d: "M" + pts.map(p => p.join(",")).join("L") + `L${x(N)},${y(40)}L${x(1)},${y(40)}Z`, fill: "url(#area)" }, svg);
+    const line = el("path", { d: "M" + pts.map(p => p.join(",")).join("L"), fill: "none", stroke: "#7CD3E6", "stroke-width": 2, "stroke-linejoin": "round", class: "draw" }, svg);
+    line.style.setProperty("--len", Math.ceil(line.getTotalLength ? line.getTotalLength() : 2000));
+    // x labels
+    sessions.forEach(s => { if (s.n === 1 || s.n % 3 === 0 || s.n === N) txt(svg, x(s.n), H - m.b + 18, "S" + s.n, { "text-anchor": "middle" }); });
+    // points
+    const tip = tooltip(host);
+    sessions.forEach(s => {
+      const inS = streakSet.has(s.n), cx = x(s.n), cy = y(s.perf);
+      const hit = el("circle", { cx, cy, r: 13, fill: "transparent", class: "hit", tabindex: 0, "aria-label": `Sessão ${s.n}: ${fmt(s.perf)}%` }, svg);
+      const ring = el("circle", { cx, cy, r: 9, fill: "none", stroke: "#7CD3E6", "stroke-opacity": .5, opacity: 0, class: "ring" }, svg);
+      el("circle", { cx, cy, r: s.n === N ? 5.5 : 4, fill: inS ? "#5CC491" : "#0F151E", stroke: inS ? "#5CC491" : "#7CD3E6", "stroke-width": 2, "pointer-events": "none" }, svg);
+      const on = () => tip.show(svg, cx, cy, tipHtml(s)), off = () => tip.hide();
+      hit.addEventListener("mouseenter", on); hit.addEventListener("focus", on); hit.addEventListener("mouseleave", off); hit.addEventListener("blur", off);
+    });
+    txt(svg, x(N) - 8, y(last.perf) - 12, fmt(last.perf) + "%", { "text-anchor": "end", class: "lbl-fg", "font-weight": 500 });
+  })();
+
+  // ---------- Approval rule ----------
+  (() => {
+    const frac = approved ? 1 : streak / STREAK_NEEDED, R = 26, C = 2 * Math.PI * R;
+    document.getElementById("rule-box").innerHTML = `
+      <svg class="ring-meter" viewBox="0 0 64 64" aria-hidden="true">
+        <circle cx="32" cy="32" r="${R}" fill="none" stroke="#2A3647" stroke-width="6"/>
+        <circle cx="32" cy="32" r="${R}" fill="none" stroke="${approved ? "#5CC491" : "#E6B45C"}" stroke-width="6" stroke-linecap="round"
+          stroke-dasharray="${C * frac} ${C}" transform="rotate(-90 32 32)"/>
+        <text x="32" y="37" text-anchor="middle" style="font-family:var(--display);font-size:17px;font-weight:600;fill:var(--fg)">${approved ? STREAK_NEEDED : streak}/${STREAK_NEEDED}</text>
+      </svg>
+      <p>${approved
+        ? `<b>Critério cumprido.</b> Sessões ${approvedAt.n - 2} a ${approvedAt.n} acima de ${TARGET}%. Sequência atual: ${streak} ${streak === 1 ? "sessão" : "sessões"}.`
+        : `<b>${streak} de ${STREAK_NEEDED}</b> sessões seguidas acima de ${TARGET}%. Pela curva, a próxima sessão deve ficar em ${fmt(expected(N))}%.`}</p>`;
+    document.getElementById("streak").innerHTML = sessions.slice(-8).map(s =>
+      `<div class="tile ${s.perf >= TARGET ? "pass" : "fail"} ${streakSet.has(s.n) ? "in-streak" : ""}" title="Sessão ${s.n}"><span class="s">S${s.n}</span><span class="p">${Math.round(s.perf)}</span></div>`).join("");
+    const passCount = sessions.filter(s => s.perf >= TARGET).length;
+    const firstPass = sessions.find(s => s.perf >= TARGET);
+    document.getElementById("rule-dl").innerHTML = `
+      <dt>Sessões acima da meta</dt><dd>${passCount} de ${N}</dd>
+      <dt>Primeira vez acima da meta</dt><dd>${firstPass ? "S" + firstPass.n + " · " + dShort(firstPass.at) : "—"}</dd>
+      <dt>Melhor sessão</dt><dd>${fmt(Math.max(...perf))}%</dd>
+      <dt>Média da turma no platô</dt><dd>${fmt(mean(classPlat))}%</dd>`;
+  })();
+
+  // ---------- Class position ----------
+  (() => {
+    const host = document.getElementById("class"), W = 540, H = 200, m = { l: 92, r: 20, t: 26, b: 30 };
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Distribuição da turma" }, host);
+    const x = v => m.l + (v - 35) / 65 * (W - m.l - m.r);
+    for (let v = 40; v <= 100; v += 10) { el("line", { x1: x(v), x2: x(v), y1: m.t - 6, y2: H - m.b, stroke: "#1F2938" }, svg); txt(svg, x(v), H - m.b + 18, v + "%", { "text-anchor": "middle" }); }
+    el("line", { x1: x(TARGET), x2: x(TARGET), y1: m.t - 6, y2: H - m.b, stroke: "#E6B45C", "stroke-dasharray": "4 4", opacity: .7 }, svg);
+    const rows = [{ label: "1ª sessão", data: classFirst, me: firstPerf, p: pctFirst, y: m.t + 34 }, { label: "Platô", data: classPlat, me: plateau, p: pctPlat, y: m.t + 108 }];
+    rows.forEach(r => {
+      txt(svg, 0, r.y + 4, r.label.toUpperCase(), { class: "lbl", "letter-spacing": ".08em" });
+      const sorted = [...r.data].sort((a, b) => a - b), q = p => sorted[Math.floor(p * (sorted.length - 1))];
+      el("rect", { x: x(q(.25)), y: r.y - 16, width: x(q(.75)) - x(q(.25)), height: 32, rx: 6, fill: "#141C27" }, svg);
+      el("line", { x1: x(q(.5)), x2: x(q(.5)), y1: r.y - 16, y2: r.y + 16, stroke: "#2A3647", "stroke-width": 2 }, svg);
+      // jittered beeswarm-ish
+      const placed = [];
+      sorted.forEach(v => { let off = 0, k = 0; const px = x(v); while (placed.some(p => Math.abs(p[0] - px) < 7 && Math.abs(p[1] - off) < 7)) { k++; off = (k % 2 ? 1 : -1) * Math.ceil(k / 2) * 7; } placed.push([px, off]); el("circle", { cx: px, cy: r.y + off, r: 3.2, fill: "#5B6878", opacity: .9 }, svg); });
+      el("circle", { cx: x(r.me), cy: r.y, r: 7, fill: "#7CD3E6", stroke: "#090D13", "stroke-width": 2.5 }, svg);
+      txt(svg, x(r.me), r.y - 24, `Ana · ${fmt(r.me)}% · P${r.p}`, { "text-anchor": "middle", class: "lbl-accent", "font-weight": 500 });
+    });
+    const p = document.createElement("p"); p.className = "sub"; p.style.margin = "0";
+    p.innerHTML = `Faixa cinza: metade central da turma. Linha: mediana. Ana saiu do percentil <b style="color:var(--fg)">${pctFirst}</b> para o <b style="color:var(--fg)">${pctPlat}</b>.`;
+    host.appendChild(p);
+  })();
+
+  // ---------- Speed × accuracy ----------
+  (() => {
+    const host = document.getElementById("scatter"), W = 540, H = 260, m = { l: 40, r: 16, t: 14, b: 40 };
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Dispersão velocidade por precisão" }, host);
+    const ax = sessions.map(s => s.attempts), xmin = Math.min(...ax) - 2, xmaxv = Math.max(...ax) + 2;
+    const x = v => m.l + (v - xmin) / (xmaxv - xmin) * (W - m.l - m.r);
+    const y = v => m.t + (100 - v) / 50 * (H - m.t - m.b);
+    for (let v = 50; v <= 100; v += 10) { el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: "#1F2938" }, svg); txt(svg, m.l - 8, y(v) + 4, v + "%", { "text-anchor": "end" }); }
+    for (let v = Math.ceil(xmin / 5) * 5; v <= xmaxv; v += 5) txt(svg, x(v), H - m.b + 18, v, { "text-anchor": "middle" });
+    txt(svg, (m.l + W - m.r) / 2, H - 4, "TENTATIVAS POR SESSÃO →", { "text-anchor": "middle", "letter-spacing": ".08em" });
+    el("line", { x1: m.l, x2: W - m.r, y1: y(TARGET), y2: y(TARGET), stroke: "#E6B45C", "stroke-dasharray": "4 4", opacity: .6 }, svg);
+    // path in time order
+    el("path", { d: "M" + sessions.map(s => x(s.attempts) + "," + y(s.perf)).join("L"), fill: "none", stroke: "#2A3647", "stroke-width": 1 }, svg);
+    const tip = tooltip(host);
+    sessions.forEach((s, i) => {
+      const t = i / (N - 1), cx = x(s.attempts), cy = y(s.perf);
+      const c = el("circle", { cx, cy, r: 5, fill: "#7CD3E6", "fill-opacity": (0.15 + 0.85 * t).toFixed(2), stroke: "#7CD3E6", "stroke-opacity": (0.3 + 0.7 * t).toFixed(2), class: "hit", tabindex: 0, "aria-label": `Sessão ${s.n}` }, svg);
+      const on = () => tip.show(svg, cx, cy, tipHtml(s)), off = () => tip.hide();
+      c.addEventListener("mouseenter", on); c.addEventListener("focus", on); c.addEventListener("mouseleave", off); c.addEventListener("blur", off);
+    });
+    txt(svg, x(sessions[0].attempts) + 9, y(sessions[0].perf) + 4, "S1", { class: "lbl" });
+    txt(svg, x(last.attempts) + 9, y(last.perf) + 4, "S" + N, { class: "lbl-accent" });
+    const p = document.createElement("p"); p.className = "sub"; p.style.margin = "0";
+    p.innerHTML = `Correlação ritmo × precisão: <b style="color:var(--fg)">r = ${fmt(rSpeedAcc, 2)}</b>. ${rSpeedAcc > 0.3 ? "Ganhou velocidade sem trocar precisão por isso." : rSpeedAcc < -0.3 ? "Quando acelera, erra mais: sinal de troca de precisão por velocidade." : "Ritmo e precisão evoluem de forma independente."}`;
+    host.appendChild(p);
+  })();
+
+  // ---------- Context (fatigue / gaps) ----------
+  (() => {
+    const host = document.getElementById("context"), W = 540, H = 52 * groups.length + 34, m = { l: 168, r: 56, t: 8 };
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Efeito de fadiga e pausas" }, host);
+    const lim = 10, x = v => m.l + (v + lim) / (2 * lim) * (W - m.l - m.r), x0 = x(0);
+    for (let v = -lim; v <= lim; v += 5) { el("line", { x1: x(v), x2: x(v), y1: m.t, y2: H - 26, stroke: v === 0 ? "#2A3647" : "#1F2938", "stroke-width": v === 0 ? 1.5 : 1 }, svg); txt(svg, x(v), H - 8, (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v) + " pp", { "text-anchor": "middle" }); }
+    groups.forEach((g, i) => {
+      const cy = m.t + i * 52 + 22, v = Math.max(-lim, Math.min(lim, g.v));
+      txt(svg, 0, cy - 2, g.key, { class: "lbl-fg", style: "font-family:var(--body);font-size:13px" });
+      txt(svg, 0, cy + 14, `${g.n} ${g.n === 1 ? "sessão" : "sessões"}`, {});
+      const pos = v >= 0, w = Math.abs(x(v) - x0);
+      el("rect", { x: pos ? x0 : x0 - w, y: cy - 9, width: Math.max(w, 1.5), height: 18, rx: 3, fill: pos ? "#5CC491" : "#E57A63", "fill-opacity": .85 }, svg);
+      txt(svg, pos ? x0 + w + 8 : x0 - w - 8, cy + 4, signed(g.v) + " pp", { "text-anchor": pos ? "start" : "end", class: "lbl-fg" });
+    });
+  })();
+
+  // ---------- Error composition ----------
+  (() => {
+    const host = document.getElementById("errors"), W = 540, H = 230, m = { l: 40, r: 12, t: 12, b: 30 };
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Erros por tentativa" }, host);
+    const maxV = 0.5, bw = (W - m.l - m.r) / N;
+    const y = v => m.t + (maxV - v) / maxV * (H - m.t - m.b);
+    for (let v = 0; v <= maxV + 1e-9; v += 0.1) { el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: "#1F2938" }, svg); txt(svg, m.l - 8, y(v) + 4, fmt(v, 1).replace(",", ","), { "text-anchor": "end" }); }
+    const tip = tooltip(host);
+    sessions.forEach((s, i) => {
+      const bx = m.l + i * bw + bw * 0.18, w = bw * 0.64;
+      const missed = s.missed / s.attempts, coll = (s.errors - s.missed) / s.attempts;
+      el("rect", { x: bx, y: y(missed), width: w, height: y(0) - y(missed), fill: "#E6B45C", "fill-opacity": .85 }, svg);
+      el("rect", { x: bx, y: y(missed + coll), width: w, height: y(missed) - y(missed + coll), fill: "#E57A63", "fill-opacity": .85 }, svg);
+      if (s.n === 1 || s.n % 3 === 0 || s.n === N) txt(svg, bx + w / 2, H - m.b + 18, "S" + s.n, { "text-anchor": "middle" });
+      const hit = el("rect", { x: m.l + i * bw, y: m.t, width: bw, height: H - m.t - m.b, fill: "transparent", class: "hit", tabindex: 0, "aria-label": `Sessão ${s.n}` }, svg);
+      const on = () => tip.show(svg, bx + w / 2, y(missed + coll), `<b>Sessão ${s.n}</b><div class="row"><span>Erros por tentativa</span><span>${fmt((s.errors) / s.attempts, 2)}</span></div><div class="row"><span>Aberturas perdidas</span><span>${s.missed}</span></div><div class="row"><span>Colisões</span><span>${s.errors - s.missed}</span></div>`), off = () => tip.hide();
+      hit.addEventListener("mouseenter", on); hit.addEventListener("focus", on); hit.addEventListener("mouseleave", off); hit.addEventListener("blur", off);
+    });
+  })();
+
+  // ---------- Insights ----------
+  (() => {
+    const fat = groups[2], gapG = groups[3];
+    const missedShareEarly = mean(sessions.slice(0, 5).map(s => s.missed / Math.max(1, s.errors)));
+    const missedShareLate = mean(sessions.slice(-5).map(s => s.missed / Math.max(1, s.errors)));
+    const items = [
+      { t: approved ? "pos" : "neu", h: approved ? "Apta pelo critério de 3 sessões" : `Faltam ${STREAK_NEEDED - streak} sessões para o critério`,
+        p: approved ? `Atingiu ${STREAK_NEEDED} sessões seguidas acima de ${TARGET}% na sessão ${approvedAt.n}, ${N - approvedAt.n} sessões antes do fim do período.` : `A curva projeta ${fmt(expected(N))}% na próxima sessão, acima da meta.` },
+      { t: "pos", h: `Aprendizagem rápida: platô em ~${toPlateau} sessões`, p: `Ganhou ${fmt(earlySlope)} pp por sessão no início e estabilizou perto de ${fmt(plateau)}%. Saiu de ${fmt(firstPerf)}% para ${fmt(plateau)}% (${signed(plateau - firstPerf)} pp).` },
+      { t: fat.v < -2 ? "neg" : "neu", h: "Fadiga em blocos de 3 sessões", p: `A 3ª sessão seguida no mesmo dia rende ${signed(fat.v)} pp em relação ao esperado. Recomenda-se no máximo 2 sessões por bloco.` },
+      { t: gapG.v < -2 ? "neg" : "neu", h: "Perde rendimento após pausas longas", p: `Na volta da pausa de ${sessions.find(s => s.sinceGap === 0)?.gap ?? "—"} dias caiu ${signed(gapG.v)} pp vs a curva e recuperou em 2 sessões. Vale uma sessão de aquecimento sem registro.` },
+      { t: consistency < 3 ? "pos" : "neg", h: consistency < 3 ? "Resultado estável" : "Resultado ainda oscila", p: `Desvio padrão de ±${fmt(consistency)} pp nas últimas ${LAST_N} sessões${consistency < 3 ? ", baixo o suficiente para confiar no platô." : ". O platô ainda não é confiável."}` },
+      { t: "neu", h: "Os erros mudaram de natureza", p: `Aberturas perdidas eram ${Math.round(missedShareEarly * 100)}% dos erros no início e são ${Math.round(missedShareLate * 100)}% agora. Os erros restantes são mais de controle fino do que de leitura do obstáculo.` },
+    ];
+    const mk = { pos: "↑", neg: "↓", neu: "•" };
+    document.getElementById("insights").innerHTML = items.map(i => `<li><span class="mk ${i.t}">${mk[i.t]}</span><div><h3>${i.h}</h3><p>${i.p}</p></div></li>`).join("");
+  })();
+
+  // ---------- Table ----------
+  (() => {
+    const rows = [...sessions].reverse().map(s => `<tr>
+      <td>S${s.n}</td><td>${dFull(s.at)}</td><td>${hm(s.at)}${s.order > 1 ? `<span class="tag">${s.order}ª no dia</span>` : ""}${s.sinceGap === 0 ? `<span class="tag">após ${s.gap} dias</span>` : ""}</td>
+      <td class="r">${s.attempts}</td><td class="r">${s.correct}</td><td class="r">${s.errors}</td><td class="r">${s.missed}</td>
+      <td><div class="perf"><span style="width:48px;text-align:right">${fmt(s.perf)}%</span><span class="bar"><span class="${s.perf >= TARGET ? "pass" : ""}" style="width:${s.perf}%"></span></span></div></td>
+      <td class="r"><span class="delta ${s.resid >= 0 ? "pos" : "neg"}">${signed(s.resid)}</span></td></tr>`).join("");
+    document.getElementById("log").innerHTML = `<thead><tr><th>Sessão</th><th>Data</th><th>Hora</th><th class="r">Tentativas</th><th class="r">Acertos</th><th class="r">Erros</th><th class="r">Aberturas perdidas</th><th>Performance</th><th class="r">Δ curva (pp)</th></tr></thead><tbody>${rows}</tbody>`;
+  })();
+})();
+</script>
