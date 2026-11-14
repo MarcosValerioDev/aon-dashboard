@@ -1,4 +1,5 @@
 <title>Painel de Evolução do Aluno</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Saira+Semi+Condensed:wght@500;600;700&display=swap">
@@ -145,20 +146,95 @@ footer code { font-family: var(--mono); color: var(--muted); font-size: 11.5px; 
   .kpi:nth-child(3n) { border-right: 0; }
   .kpi:nth-child(-n+3) { border-bottom: 1px solid var(--line); }
   .span-8, .span-4, .span-6 { grid-column: span 12; }
+
+  /* Tipografia maior no celular e no tablet */
+  body { font-size: 17px; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  .eyebrow { font-size: 13px; }
+  .avatar { width: 60px; height: 60px; font-size: 22px; }
+  .who h1 { font-size: 30px; }
+  .who .meta { font-size: 16px; }
+  .pill { font-size: 14px; }
+  .status small { font-size: 15px; }
+  .kpi { padding: 16px 14px 18px; }
+  .kpi .v { font-size: 34px; }
+  .kpi .v small { font-size: 20px; }
+  .kpi .d { font-size: 15px; }
+  .panel h2 { font-size: 23px; }
+  .panel .sub { font-size: 16px; }
+  .legend { font-size: 15px; }
+  .tip { font-size: 15px; }
+  .tip b { font-size: 19px; }
+  .tile .s { font-size: 13px; }
+  .tile .p { font-size: 20px; }
+  .rule-box p { font-size: 16px; }
+  .rule dl { font-size: 16px; }
+  .rule dd { font-size: 15px; }
+  .insights .mk { width: 28px; height: 28px; font-size: 15px; }
+  .insights li { grid-template-columns: 28px 1fr; }
+  .insights h3 { font-size: 17px; }
+  .insights p { font-size: 16px; }
+  table { font-size: 16px; }
+  th { font-size: 13px; }
+  .tag { font-size: 13px; }
+  footer { font-size: 15px; }
+  footer code { font-size: 14px; }
+
+  /* Gráficos: viewBox fixo (540–760) encolhe na tela. O JS grava --k (unidades do
+     viewBox por pixel), então o texto sai com o tamanho real em px abaixo. */
+  svg:not(.ring-meter) text { font-size: calc(13px * var(--k, 1.7)); }
+  svg:not(.ring-meter) text.lbl-fg { font-size: calc(14px * var(--k, 1.7)) !important; }
+}
+/* Tablet: um degrau acima do celular */
+@media (min-width: 641px) and (max-width: 1040px) {
+  .strip { grid-template-columns: auto 1fr; }
+  .status { grid-column: 1 / -1; justify-items: start; }
+  .status small { text-align: left; }
+  body { font-size: 22px; }
+  .eyebrow { font-size: 16.5px; }
+  .avatar { width: 76px; height: 76px; font-size: 28px; }
+  .who h1 { font-size: 40px; }
+  .who .meta { font-size: 21px; }
+  .pill { font-size: 17px; padding: 8px 14px; }
+  .status small { font-size: 20px; }
+  .kpi .v { font-size: 46px; }
+  .kpi .v small { font-size: 27px; }
+  .kpi .d { font-size: 20px; }
+  .panel h2 { font-size: 31px; }
+  .panel .sub { font-size: 21px; max-width: none; }
+  .legend { font-size: 20px; }
+  .legend i.dot { width: 11px; height: 11px; }
+  .tip { font-size: 20px; min-width: 240px; }
+  .tip b { font-size: 25px; }
+  .tile .s { font-size: 17px; }
+  .tile .p { font-size: 28px; }
+  .rule-box p { font-size: 21px; }
+  .rule dl { font-size: 21px; }
+  .rule dd { font-size: 20px; }
+  .insights { grid-template-columns: minmax(0, 1fr); }
+  .insights .mk { width: 34px; height: 34px; font-size: 19px; }
+  .insights li { grid-template-columns: 34px 1fr; gap: 14px; }
+  .insights h3 { font-size: 23px; }
+  .insights p { font-size: 21px; }
+  table { font-size: 21px; }
+  th { font-size: 17px; }
+  .tag { font-size: 16.5px; }
+  footer { font-size: 20px; }
+  footer code { font-size: 18.5px; }
+  svg:not(.ring-meter) text { font-size: calc(19px * var(--k, 1)); }
+  svg:not(.ring-meter) text.lbl-fg { font-size: calc(19px * var(--k, 1)) !important; }
 }
 @media (max-width: 640px) {
   .strip { grid-template-columns: auto 1fr; }
   .status { grid-column: 1 / -1; justify-items: start; }
   .status small { text-align: left; }
-  .who h1 { font-size: 24px; }
   .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .kpi { border-right: 1px solid var(--line) !important; border-bottom: 1px solid var(--line); }
   .kpi:nth-child(2n) { border-right: 0 !important; }
   .kpi:nth-last-child(-n+2) { border-bottom: 0; }
-  .kpi .v { font-size: 28px; }
   .insights { grid-template-columns: minmax(0, 1fr); }
   .streak { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .panel { padding: 16px; }
+
 }
 @media (prefers-reduced-motion: no-preference) {
   .draw { stroke-dasharray: var(--len); stroke-dashoffset: var(--len); animation: draw 1.4s cubic-bezier(.3,.7,.2,1) .15s forwards; }
@@ -385,6 +461,9 @@ footer code { font-family: var(--mono); color: var(--muted); font-size: 11.5px; 
   const hm = d => d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
   const el = (tag, attrs = {}, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
   const txt = (parent, x, y, s, attrs = {}) => { const t = el("text", { x, y, ...attrs }, parent); t.textContent = s; return t; };
+  // Celular: gráficos usam margens/espaçamentos próprios para caber texto maior
+  const narrow = matchMedia("(max-width: 640px)").matches;
+  const compact = matchMedia("(max-width: 1040px)").matches; // celular + tablet
   const signed = (v, d = 1) => (v > 0 ? "+" : v < 0 ? "−" : "±") + fmt(Math.abs(v), d);
 
   // ---------- Header ----------
@@ -427,7 +506,7 @@ footer code { font-family: var(--mono); color: var(--muted); font-size: 11.5px; 
 
   // ---------- Learning curve ----------
   (() => {
-    const host = document.getElementById("curve"), W = 760, H = 320, m = { l: 40, r: 18, t: 22, b: 34 };
+    const host = document.getElementById("curve"), W = 760, H = compact ? 460 : 320, m = compact ? { l: 78, r: 18, t: 30, b: 56 } : { l: 40, r: 18, t: 22, b: 34 };
     const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Gráfico da curva de aprendizagem" }, host);
     const PROJ = 3, xmax = N + PROJ;
     const x = n => m.l + (n - 0.5) / xmax * (W - m.l - m.r);
@@ -456,7 +535,8 @@ footer code { font-family: var(--mono); color: var(--muted); font-size: 11.5px; 
     const line = el("path", { d: "M" + pts.map(p => p.join(",")).join("L"), fill: "none", stroke: "#7CD3E6", "stroke-width": 2, "stroke-linejoin": "round", class: "draw" }, svg);
     line.style.setProperty("--len", Math.ceil(line.getTotalLength ? line.getTotalLength() : 2000));
     // x labels
-    sessions.forEach(s => { if (s.n === 1 || s.n % 3 === 0 || s.n === N) txt(svg, x(s.n), H - m.b + 18, "S" + s.n, { "text-anchor": "middle" }); });
+    const step = narrow ? 6 : 3;
+    sessions.forEach(s => { if (s.n === 1 || s.n % step === 0 || (s.n === N && N % step > 2)) txt(svg, x(s.n), H - m.b + (compact ? 34 : 18), "S" + s.n, { "text-anchor": "middle" }); });
     // points
     const tip = tooltip(host);
     sessions.forEach(s => {
@@ -496,14 +576,14 @@ footer code { font-family: var(--mono); color: var(--muted); font-size: 11.5px; 
 
   // ---------- Class position ----------
   (() => {
-    const host = document.getElementById("class"), W = 540, H = 200, m = { l: 92, r: 20, t: 26, b: 30 };
+    const host = document.getElementById("class"), W = 540, H = compact ? 330 : 200, m = compact ? { l: 26, r: 26, t: 20, b: 46 } : { l: 92, r: 20, t: 26, b: 30 };
     const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Distribuição da turma" }, host);
     const x = v => m.l + (v - 35) / 65 * (W - m.l - m.r);
-    for (let v = 40; v <= 100; v += 10) { el("line", { x1: x(v), x2: x(v), y1: m.t - 6, y2: H - m.b, stroke: "#1F2938" }, svg); txt(svg, x(v), H - m.b + 18, v + "%", { "text-anchor": "middle" }); }
+    for (let v = 40; v <= 100; v += 10) { el("line", { x1: x(v), x2: x(v), y1: m.t - 6, y2: H - m.b, stroke: "#1F2938" }, svg); txt(svg, x(v), H - m.b + (compact ? 30 : 18), v + "%", { "text-anchor": "middle" }); }
     el("line", { x1: x(TARGET), x2: x(TARGET), y1: m.t - 6, y2: H - m.b, stroke: "#E6B45C", "stroke-dasharray": "4 4", opacity: .7 }, svg);
-    const rows = [{ label: "1ª sessão", data: classFirst, me: firstPerf, p: pctFirst, y: m.t + 34 }, { label: "Platô", data: classPlat, me: plateau, p: pctPlat, y: m.t + 108 }];
+    const rows = [{ label: "1ª sessão", data: classFirst, me: firstPerf, p: pctFirst, y: m.t + (compact ? 84 : 34) }, { label: "Platô", data: classPlat, me: plateau, p: pctPlat, y: m.t + (compact ? 214 : 108) }];
     rows.forEach(r => {
-      txt(svg, 0, r.y + 4, r.label.toUpperCase(), { class: "lbl", "letter-spacing": ".08em" });
+      txt(svg, 0, compact ? r.y - 62 : r.y + 4, r.label.toUpperCase(), { class: "lbl", "letter-spacing": ".08em" });
       const sorted = [...r.data].sort((a, b) => a - b), q = p => sorted[Math.floor(p * (sorted.length - 1))];
       el("rect", { x: x(q(.25)), y: r.y - 16, width: x(q(.75)) - x(q(.25)), height: 32, rx: 6, fill: "#141C27" }, svg);
       el("line", { x1: x(q(.5)), x2: x(q(.5)), y1: r.y - 16, y2: r.y + 16, stroke: "#2A3647", "stroke-width": 2 }, svg);
@@ -511,7 +591,7 @@ footer code { font-family: var(--mono); color: var(--muted); font-size: 11.5px; 
       const placed = [];
       sorted.forEach(v => { let off = 0, k = 0; const px = x(v); while (placed.some(p => Math.abs(p[0] - px) < 7 && Math.abs(p[1] - off) < 7)) { k++; off = (k % 2 ? 1 : -1) * Math.ceil(k / 2) * 7; } placed.push([px, off]); el("circle", { cx: px, cy: r.y + off, r: 3.2, fill: "#5B6878", opacity: .9 }, svg); });
       el("circle", { cx: x(r.me), cy: r.y, r: 7, fill: "#7CD3E6", stroke: "#090D13", "stroke-width": 2.5 }, svg);
-      txt(svg, x(r.me), r.y - 24, `Ana · ${fmt(r.me)}% · P${r.p}`, { "text-anchor": "middle", class: "lbl-accent", "font-weight": 500 });
+      txt(svg, x(r.me), r.y - (compact ? 30 : 24), `Ana · ${fmt(r.me)}% · P${r.p}`, { "text-anchor": "middle", class: "lbl-accent", "font-weight": 500 });
     });
     const p = document.createElement("p"); p.className = "sub"; p.style.margin = "0";
     p.innerHTML = `Faixa cinza: metade central da turma. Linha: mediana. Ana saiu do percentil <b style="color:var(--fg)">${pctFirst}</b> para o <b style="color:var(--fg)">${pctPlat}</b>.`;
@@ -520,13 +600,13 @@ footer code { font-family: var(--mono); color: var(--muted); font-size: 11.5px; 
 
   // ---------- Speed × accuracy ----------
   (() => {
-    const host = document.getElementById("scatter"), W = 540, H = 260, m = { l: 40, r: 16, t: 14, b: 40 };
+    const host = document.getElementById("scatter"), W = 540, H = compact ? 380 : 260, m = compact ? { l: 66, r: 16, t: 14, b: 76 } : { l: 40, r: 16, t: 14, b: 40 };
     const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Dispersão velocidade por precisão" }, host);
     const ax = sessions.map(s => s.attempts), xmin = Math.min(...ax) - 2, xmaxv = Math.max(...ax) + 2;
     const x = v => m.l + (v - xmin) / (xmaxv - xmin) * (W - m.l - m.r);
     const y = v => m.t + (100 - v) / 50 * (H - m.t - m.b);
     for (let v = 50; v <= 100; v += 10) { el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: "#1F2938" }, svg); txt(svg, m.l - 8, y(v) + 4, v + "%", { "text-anchor": "end" }); }
-    for (let v = Math.ceil(xmin / 5) * 5; v <= xmaxv; v += 5) txt(svg, x(v), H - m.b + 18, v, { "text-anchor": "middle" });
+    for (let v = Math.ceil(xmin / 5) * 5; v <= xmaxv; v += 5) txt(svg, x(v), H - m.b + (compact ? 30 : 18), v, { "text-anchor": "middle" });
     txt(svg, (m.l + W - m.r) / 2, H - 4, "TENTATIVAS POR SESSÃO →", { "text-anchor": "middle", "letter-spacing": ".08em" });
     el("line", { x1: m.l, x2: W - m.r, y1: y(TARGET), y2: y(TARGET), stroke: "#E6B45C", "stroke-dasharray": "4 4", opacity: .6 }, svg);
     // path in time order
@@ -547,14 +627,22 @@ footer code { font-family: var(--mono); color: var(--muted); font-size: 11.5px; 
 
   // ---------- Context (fatigue / gaps) ----------
   (() => {
-    const host = document.getElementById("context"), W = 540, H = 52 * groups.length + 34, m = { l: 168, r: 56, t: 8 };
+    const RH = compact ? 100 : 52; // altura de cada linha
+    const host = document.getElementById("context"), W = 540, H = RH * groups.length + (compact ? 50 : 34), m = compact ? { l: 90, r: 90, t: 8 } : { l: 168, r: 56, t: 8 };
     const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Efeito de fadiga e pausas" }, host);
     const lim = 10, x = v => m.l + (v + lim) / (2 * lim) * (W - m.l - m.r), x0 = x(0);
-    for (let v = -lim; v <= lim; v += 5) { el("line", { x1: x(v), x2: x(v), y1: m.t, y2: H - 26, stroke: v === 0 ? "#2A3647" : "#1F2938", "stroke-width": v === 0 ? 1.5 : 1 }, svg); txt(svg, x(v), H - 8, (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v) + " pp", { "text-anchor": "middle" }); }
+    for (let v = -lim; v <= lim; v += 5) { el("line", { x1: x(v), x2: x(v), y1: m.t, y2: H - (compact ? 40 : 26), stroke: v === 0 ? "#2A3647" : "#1F2938", "stroke-width": v === 0 ? 1.5 : 1 }, svg); txt(svg, x(v), H - 8, (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v) + " pp", { "text-anchor": "middle" }); }
     groups.forEach((g, i) => {
-      const cy = m.t + i * 52 + 22, v = Math.max(-lim, Math.min(lim, g.v));
-      txt(svg, 0, cy - 2, g.key, { class: "lbl-fg", style: "font-family:var(--body);font-size:13px" });
-      txt(svg, 0, cy + 14, `${g.n} ${g.n === 1 ? "sessão" : "sessões"}`, {});
+      const cy = m.t + i * RH + (compact ? 64 : 22), v = Math.max(-lim, Math.min(lim, g.v));
+      const nTxt = `${g.n} ${g.n === 1 ? "sessão" : "sessões"}`;
+      if (compact) {
+        // nome do grupo numa linha própria acima da barra
+        const t = txt(svg, 0, cy - 30, g.key + " ", { class: "lbl-fg", style: "font-family:var(--body)" });
+        el("tspan", { class: "lbl" }, t).textContent = "· " + nTxt;
+      } else {
+        txt(svg, 0, cy - 2, g.key, { class: "lbl-fg", style: "font-family:var(--body);font-size:13px" });
+        txt(svg, 0, cy + 14, nTxt, {});
+      }
       const pos = v >= 0, w = Math.abs(x(v) - x0);
       el("rect", { x: pos ? x0 : x0 - w, y: cy - 9, width: Math.max(w, 1.5), height: 18, rx: 3, fill: pos ? "#5CC491" : "#E57A63", "fill-opacity": .85 }, svg);
       txt(svg, pos ? x0 + w + 8 : x0 - w - 8, cy + 4, signed(g.v) + " pp", { "text-anchor": pos ? "start" : "end", class: "lbl-fg" });
@@ -563,7 +651,7 @@ footer code { font-family: var(--mono); color: var(--muted); font-size: 11.5px; 
 
   // ---------- Error composition ----------
   (() => {
-    const host = document.getElementById("errors"), W = 540, H = 230, m = { l: 40, r: 12, t: 12, b: 30 };
+    const host = document.getElementById("errors"), W = 540, H = compact ? 340 : 230, m = compact ? { l: 62, r: 12, t: 12, b: 50 } : { l: 40, r: 12, t: 12, b: 30 };
     const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Erros por tentativa" }, host);
     const maxV = 0.5, bw = (W - m.l - m.r) / N;
     const y = v => m.t + (maxV - v) / maxV * (H - m.t - m.b);
@@ -574,7 +662,7 @@ footer code { font-family: var(--mono); color: var(--muted); font-size: 11.5px; 
       const missed = s.missed / s.attempts, coll = (s.errors - s.missed) / s.attempts;
       el("rect", { x: bx, y: y(missed), width: w, height: y(0) - y(missed), fill: "#E6B45C", "fill-opacity": .85 }, svg);
       el("rect", { x: bx, y: y(missed + coll), width: w, height: y(missed) - y(missed + coll), fill: "#E57A63", "fill-opacity": .85 }, svg);
-      if (s.n === 1 || s.n % 3 === 0 || s.n === N) txt(svg, bx + w / 2, H - m.b + 18, "S" + s.n, { "text-anchor": "middle" });
+      if (s.n === 1 || s.n % (narrow ? 6 : 3) === 0 || (s.n === N && N % (narrow ? 6 : 3) > 2)) txt(svg, bx + w / 2, H - m.b + (compact ? 32 : 18), "S" + s.n, { "text-anchor": "middle" });
       const hit = el("rect", { x: m.l + i * bw, y: m.t, width: bw, height: H - m.t - m.b, fill: "transparent", class: "hit", tabindex: 0, "aria-label": `Sessão ${s.n}` }, svg);
       const on = () => tip.show(svg, bx + w / 2, y(missed + coll), `<b>Sessão ${s.n}</b><div class="row"><span>Erros por tentativa</span><span>${fmt((s.errors) / s.attempts, 2)}</span></div><div class="row"><span>Aberturas perdidas</span><span>${s.missed}</span></div><div class="row"><span>Colisões</span><span>${s.errors - s.missed}</span></div>`), off = () => tip.hide();
       hit.addEventListener("mouseenter", on); hit.addEventListener("focus", on); hit.addEventListener("mouseleave", off); hit.addEventListener("blur", off);
@@ -608,5 +696,14 @@ footer code { font-family: var(--mono); color: var(--muted); font-size: 11.5px; 
       <td class="r"><span class="delta ${s.resid >= 0 ? "pos" : "neg"}">${signed(s.resid)}</span></td></tr>`).join("");
     document.getElementById("log").innerHTML = `<thead><tr><th>Sessão</th><th>Data</th><th>Hora</th><th class="r">Tentativas</th><th class="r">Acertos</th><th class="r">Erros</th><th class="r">Aberturas perdidas</th><th>Performance</th><th class="r">Δ curva (pp)</th></tr></thead><tbody>${rows}</tbody>`;
   })();
+
+  // ---------- Texto dos gráficos em tamanho real ----------
+  // Os SVGs usam viewBox fixo e encolhem no celular; --k = unidades do viewBox por pixel
+  // de tela, usado no CSS mobile para manter o texto legível.
+  const ro = new ResizeObserver(entries => entries.forEach(({ target: s }) => {
+    const w = s.getBoundingClientRect().width;
+    if (w) s.style.setProperty("--k", (s.viewBox.baseVal.width / w).toFixed(3));
+  }));
+  document.querySelectorAll("#curve svg, #class svg, #scatter svg, #context svg, #errors svg").forEach(s => ro.observe(s));
 })();
 </script>
