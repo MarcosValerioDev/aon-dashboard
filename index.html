@@ -318,28 +318,14 @@ footer code { font-family: var(--mono); color: var(--muted); font-size: 11.5px; 
       <div class="chart" id="scatter"></div>
     </section>
 
-    <section class="panel span-6">
+    <section class="panel span-12">
       <header>
         <div>
           <h2>Fadiga e pausas</h2>
           <p class="sub">Diferença média entre o resultado real e o esperado pela curva, em pontos percentuais. Isola o efeito do contexto do efeito do aprendizado.</p>
         </div>
       </header>
-      <div class="chart" id="context"></div>
-    </section>
-
-    <section class="panel span-6">
-      <header>
-        <div>
-          <h2>Composição dos erros</h2>
-          <p class="sub">Erros por tentativa ao longo das sessões, separando aberturas perdidas de colisões.</p>
-        </div>
-        <div class="legend">
-          <span style="color:var(--bad)"><i class="dot"></i>Colisão</span>
-          <span style="color:var(--amber)"><i class="dot"></i>Abertura perdida</span>
-        </div>
-      </header>
-      <div class="chart" id="errors"></div>
+      <div class="chart" id="context" style="max-width:720px"></div>
     </section>
 
     <section class="panel span-12">
@@ -365,7 +351,7 @@ footer code { font-family: var(--mono); color: var(--muted); font-size: 11.5px; 
 
   <footer>
     <span>Protótipo com dados simulados. Nenhum número é de aluno real.</span>
-    <span>Para dados reais, cada registro precisa de <code>studentId</code> e <code>sessionAt</code> além dos campos do <code>TrainingResult</code> (<code>attemps</code>, <code>correct</code>, <code>erros</code>, <code>performance</code>, <code>missedOpening</code>).</span>
+    <span>Para dados reais, cada registro precisa de <code>studentId</code> e <code>sessionAt</code> além dos campos do <code>TrainingResult</code> (<code>attemps</code>, <code>correct</code>, <code>erros</code>, <code>performance</code>).</span>
   </footer>
 </div>
 
@@ -649,31 +635,9 @@ footer code { font-family: var(--mono); color: var(--muted); font-size: 11.5px; 
     });
   })();
 
-  // ---------- Error composition ----------
-  (() => {
-    const host = document.getElementById("errors"), W = 540, H = compact ? 340 : 230, m = compact ? { l: 62, r: 12, t: 12, b: 50 } : { l: 40, r: 12, t: 12, b: 30 };
-    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Erros por tentativa" }, host);
-    const maxV = 0.5, bw = (W - m.l - m.r) / N;
-    const y = v => m.t + (maxV - v) / maxV * (H - m.t - m.b);
-    for (let v = 0; v <= maxV + 1e-9; v += 0.1) { el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: "#1F2938" }, svg); txt(svg, m.l - 8, y(v) + 4, fmt(v, 1).replace(",", ","), { "text-anchor": "end" }); }
-    const tip = tooltip(host);
-    sessions.forEach((s, i) => {
-      const bx = m.l + i * bw + bw * 0.18, w = bw * 0.64;
-      const missed = s.missed / s.attempts, coll = (s.errors - s.missed) / s.attempts;
-      el("rect", { x: bx, y: y(missed), width: w, height: y(0) - y(missed), fill: "#E6B45C", "fill-opacity": .85 }, svg);
-      el("rect", { x: bx, y: y(missed + coll), width: w, height: y(missed) - y(missed + coll), fill: "#E57A63", "fill-opacity": .85 }, svg);
-      if (s.n === 1 || s.n % (narrow ? 6 : 3) === 0 || (s.n === N && N % (narrow ? 6 : 3) > 2)) txt(svg, bx + w / 2, H - m.b + (compact ? 32 : 18), "S" + s.n, { "text-anchor": "middle" });
-      const hit = el("rect", { x: m.l + i * bw, y: m.t, width: bw, height: H - m.t - m.b, fill: "transparent", class: "hit", tabindex: 0, "aria-label": `Sessão ${s.n}` }, svg);
-      const on = () => tip.show(svg, bx + w / 2, y(missed + coll), `<b>Sessão ${s.n}</b><div class="row"><span>Erros por tentativa</span><span>${fmt((s.errors) / s.attempts, 2)}</span></div><div class="row"><span>Aberturas perdidas</span><span>${s.missed}</span></div><div class="row"><span>Colisões</span><span>${s.errors - s.missed}</span></div>`), off = () => tip.hide();
-      hit.addEventListener("mouseenter", on); hit.addEventListener("focus", on); hit.addEventListener("mouseleave", off); hit.addEventListener("blur", off);
-    });
-  })();
-
   // ---------- Insights ----------
   (() => {
     const fat = groups[2], gapG = groups[3];
-    const missedShareEarly = mean(sessions.slice(0, 5).map(s => s.missed / Math.max(1, s.errors)));
-    const missedShareLate = mean(sessions.slice(-5).map(s => s.missed / Math.max(1, s.errors)));
     const items = [
       { t: approved ? "pos" : "neu", h: approved ? "Apta pelo critério de 3 sessões" : `Faltam ${STREAK_NEEDED - streak} sessões para o critério`,
         p: approved ? `Atingiu ${STREAK_NEEDED} sessões seguidas acima de ${TARGET}% na sessão ${approvedAt.n}, ${N - approvedAt.n} sessões antes do fim do período.` : `A curva projeta ${fmt(expected(N))}% na próxima sessão, acima da meta.` },
@@ -681,7 +645,6 @@ footer code { font-family: var(--mono); color: var(--muted); font-size: 11.5px; 
       { t: fat.v < -2 ? "neg" : "neu", h: "Fadiga em blocos de 3 sessões", p: `A 3ª sessão seguida no mesmo dia rende ${signed(fat.v)} pp em relação ao esperado. Recomenda-se no máximo 2 sessões por bloco.` },
       { t: gapG.v < -2 ? "neg" : "neu", h: "Perde rendimento após pausas longas", p: `Na volta da pausa de ${sessions.find(s => s.sinceGap === 0)?.gap ?? "—"} dias caiu ${signed(gapG.v)} pp vs a curva e recuperou em 2 sessões. Vale uma sessão de aquecimento sem registro.` },
       { t: consistency < 3 ? "pos" : "neg", h: consistency < 3 ? "Resultado estável" : "Resultado ainda oscila", p: `Desvio padrão de ±${fmt(consistency)} pp nas últimas ${LAST_N} sessões${consistency < 3 ? ", baixo o suficiente para confiar no platô." : ". O platô ainda não é confiável."}` },
-      { t: "neu", h: "Os erros mudaram de natureza", p: `Aberturas perdidas eram ${Math.round(missedShareEarly * 100)}% dos erros no início e são ${Math.round(missedShareLate * 100)}% agora. Os erros restantes são mais de controle fino do que de leitura do obstáculo.` },
     ];
     const mk = { pos: "↑", neg: "↓", neu: "•" };
     document.getElementById("insights").innerHTML = items.map(i => `<li><span class="mk ${i.t}">${mk[i.t]}</span><div><h3>${i.h}</h3><p>${i.p}</p></div></li>`).join("");
@@ -691,10 +654,10 @@ footer code { font-family: var(--mono); color: var(--muted); font-size: 11.5px; 
   (() => {
     const rows = [...sessions].reverse().map(s => `<tr>
       <td>S${s.n}</td><td>${dFull(s.at)}</td><td>${hm(s.at)}${s.order > 1 ? `<span class="tag">${s.order}ª no dia</span>` : ""}${s.sinceGap === 0 ? `<span class="tag">após ${s.gap} dias</span>` : ""}</td>
-      <td class="r">${s.attempts}</td><td class="r">${s.correct}</td><td class="r">${s.errors}</td><td class="r">${s.missed}</td>
+      <td class="r">${s.attempts}</td><td class="r">${s.correct}</td><td class="r">${s.errors}</td>
       <td><div class="perf"><span style="width:48px;text-align:right">${fmt(s.perf)}%</span><span class="bar"><span class="${s.perf >= TARGET ? "pass" : ""}" style="width:${s.perf}%"></span></span></div></td>
       <td class="r"><span class="delta ${s.resid >= 0 ? "pos" : "neg"}">${signed(s.resid)}</span></td></tr>`).join("");
-    document.getElementById("log").innerHTML = `<thead><tr><th>Sessão</th><th>Data</th><th>Hora</th><th class="r">Tentativas</th><th class="r">Acertos</th><th class="r">Erros</th><th class="r">Aberturas perdidas</th><th>Performance</th><th class="r">Δ curva (pp)</th></tr></thead><tbody>${rows}</tbody>`;
+    document.getElementById("log").innerHTML = `<thead><tr><th>Sessão</th><th>Data</th><th>Hora</th><th class="r">Tentativas</th><th class="r">Acertos</th><th class="r">Erros</th><th>Performance</th><th class="r">Δ curva (pp)</th></tr></thead><tbody>${rows}</tbody>`;
   })();
 
   // ---------- Texto dos gráficos em tamanho real ----------

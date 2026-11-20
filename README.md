@@ -10,7 +10,6 @@ Painel web de página única que mostra a evolução de um aluno ao longo das se
 - **Posição na turma**: comparação com os colegas (primeira sessão e platô).
 - **Velocidade × precisão**: relação entre tentativas e acertos.
 - **Fadiga e pausas**: efeito de várias sessões no mesmo dia e de intervalos longos sem treino.
-- **Composição dos erros**: proporção de erros por tipo (ex.: alvos perdidos).
 - **Leitura para o instrutor**: resumo textual dos achados.
 - **Registro de sessões**: tabela com o histórico completo.
 
